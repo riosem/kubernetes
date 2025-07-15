@@ -1,0 +1,70 @@
+#!/bin/bash
+
+WORKSPACE="$APP-$ENV"
+
+cluster_name() {
+    CLUSTER_NAME=$(terraform output -raw cluster_name)
+    echo "$CLUSTER_NAME"
+
+}
+
+get_repository_name() {
+    REPOSITORY_NAME=$(terraform output -raw repository_name)
+    echo "$REPOSITORY_NAME"
+}
+
+run_init(){
+    tf_vars=$(get_tf_vars "$@")
+    terraform init $tf_vars
+    terraform workspace select -or-create=true $WORKSPACE
+}
+
+run_plan(){
+    run_init
+    tf_vars=$(get_tf_vars "$@")
+    terraform plan $tf_vars
+}
+
+run_apply(){
+    run_init
+    tf_vars=$(get_tf_vars "$@")
+    terraform apply $tf_vars -auto-approve
+}
+
+run_plan_destroy(){
+    run_init
+    tf_vars=$(get_tf_vars "$@")
+    terraform plan -destroy $tf_vars
+}
+
+run_apply_destroy(){
+    run_init
+    tf_vars=$(get_tf_vars "$@")
+    terraform apply -destroy $tf_vars -auto-approve
+}
+
+get_tf_vars(){
+    vars=()
+    vars+="-var app=$APP "
+    vars+="-var region=$REGION "
+    vars+="-var env=$ENV "
+    vars+="-var-file=./environments/$ENV.tfvars "
+    echo "${vars[@]}" 
+}
+
+case $1 in
+    init )
+        run_init "$@" ;;
+    plan )
+        run_plan "$@" ;;
+    apply )
+        run_apply "$@" ;;
+    plan-destroy )
+        run_plan_destroy "$@" ;;
+    apply-destroy )
+        run_apply_destroy "$@" ;;
+    get-cluster-name )
+        cluster_name ;;
+    get-repository-name )
+        get_repository_name ;;
+esac

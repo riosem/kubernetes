@@ -1,0 +1,42 @@
+# Terraform files
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terraform/
+**/.terraform.lock.hcl
+
+# Kubernetes manifests with real values
+manifests/apps/*.backup
+manifests/production/
+config/secrets/
+
+# Node modules
+node_modules
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# AWS credentials
+.aws/
+aws-credentials.txt
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Backup files
+*.backup
+*.bak
