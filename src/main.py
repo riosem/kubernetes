@@ -1,7 +1,6 @@
-.py
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from routers import users, products, orders
+from routers import users, products, orders, rag
 from database.connection import get_db, engine, Base
 from utils import get_hostname
 import os
@@ -16,6 +15,7 @@ app = FastAPI(title="EKS FastAPI with SQLAlchemy", version="1.0.0")
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(orders.router, prefix="/orders", tags=["orders"])
+app.include_router(rag.router)
 
 @app.get("/")
 async def root():

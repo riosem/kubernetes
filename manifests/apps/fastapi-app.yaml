@@ -19,6 +19,7 @@ spec:
       containers:
         - name: fastapi
           image: "<AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/dev-app-repo:latest" # Replace with your ECR URL
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
           env:

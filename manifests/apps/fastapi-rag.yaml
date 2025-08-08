@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-rag
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-rag
+  template:
+    metadata:
+      labels:
+        app: fastapi-rag
+    spec:
+      containers:
+      - name: fastapi
+        image: <your-ecr-or-dockerhub-repo>/fastapi-rag:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: VECTOR_DB_HOST
+          value: "vector-db"  # Service name of vector DB
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-rag
+spec:
+  type: LoadBalancer
+  selector:
+    app: fastapi-rag
+  ports:
+    - port: 80
+      targetPort: 80

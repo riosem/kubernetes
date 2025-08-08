@@ -1,6 +1,132 @@
 # EKS FastAPI with SQLAlchemy
 
-A **FastAPI application with SQLAlchemy ORM** deployed on **Amazon EKS**. Features a complete REST API with PostgreSQL database, automated deployments, and cost-optimized infrastructure.
+A **FastAPI application with SQLAlchemy ORM** deployed on **Amazon EKS** or **locally with Docker Desktop**. Features a complete REST API with PostgreSQL database, automated deployments, and cost-optimized infrastructure.
+
+---
+
+## 🧑‍💻 Local Kubernetes Deployment with Docker Desktop
+
+You can run and test all your Kubernetes apps (FastAPI, RAG, Vector DB, PostgreSQL, etc.) **locally** using Docker Desktop’s built-in Kubernetes cluster.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (with Kubernetes enabled)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) (usually installed with Docker Desktop)
+- This repository cloned locally
+
+---
+
+### 1. Enable Kubernetes in Docker Desktop
+
+- Open Docker Desktop.
+- Go to **Settings** → **Kubernetes**.
+- Check **Enable Kubernetes** and wait for it to become "Running".
+
+---
+
+### 2. Build Your Docker Images Locally
+
+For each app you want to deploy (e.g., FastAPI, RAG):
+
+```bash
+# Example for FastAPI app
+docker build -t fastapi-app:latest ./src
+
+# Example for FastAPI RAG app (if you have a separate Dockerfile)
+docker build -t fastapi-rag:latest ./src
+```
+
+---
+
+### 3. Update Kubernetes Manifests for Local Images
+
+- Edit each deployment manifest in `manifests/apps/`:
+  - Set the `image:` field to your local image name (e.g., `fastapi-app:latest`).
+  - Set `imagePullPolicy: Never` to force Kubernetes to use your local image.
+
+**Example:**
+```yaml
+containers:
+  - name: fastapi
+    image: fastapi-app:latest
+    imagePullPolicy: Never
+```
+
+---
+
+### 4. Deploy All Apps to Local Kubernetes
+
+Apply each manifest:
+
+```bash
+kubectl apply -f manifests/apps/postgres-app.yaml
+kubectl apply -f manifests/apps/vector-db.yml
+kubectl apply -f manifests/apps/fastapi-app.yaml
+kubectl apply -f manifests/apps/fastapi-rag.yaml
+```
+
+---
+
+### 5. Check Pod and Service Status
+
+```bash
+kubectl get pods
+kubectl get svc
+```
+
+Wait until all pods are `Running`.
+
+---
+
+### 6. Access Your Applications
+
+- For services with `type: LoadBalancer`, Docker Desktop exposes them on `localhost:<PORT>`.
+- Find the assigned port:
+  ```bash
+  kubectl get svc
+  ```
+- Example: If `fastapi-service` shows `80:32768/TCP`, access FastAPI at [http://localhost:32768](http://localhost:32768).
+
+---
+
+### 7. Test Your Endpoints
+
+You can use the provided script:
+
+```bash
+./test_fastapi_endpoints.sh
+```
+
+Or manually with `curl`:
+
+```bash
+curl http://localhost:<PORT>/
+curl http://localhost:<PORT>/health
+```
+
+---
+
+### 8. Tear Down
+
+To remove all resources:
+
+```bash
+kubectl delete -f manifests/apps/fastapi-app.yaml
+kubectl delete -f manifests/apps/fastapi-rag.yaml
+kubectl delete -f manifests/apps/vector-db.yml
+kubectl delete -f manifests/apps/postgres-app.yaml
+```
+
+---
+
+**Tip:**  
+You can modify and redeploy any app by rebuilding its Docker image and re-applying its manifest.
+
+---
+
+**Now you can develop and test your full Kubernetes stack locally before deploying to the cloud!**
+
+---
 
 ## 🚀 Features
 
@@ -10,7 +136,6 @@ A **FastAPI application with SQLAlchemy ORM** deployed on **Amazon EKS**. Featur
 - **Amazon EKS**: Managed Kubernetes with auto-scaling
 - **Custom Docker Images**: Built and stored in Amazon ECR
 - **Infrastructure as Code**: Complete Terraform configuration
-- **Cost Optimized**: Development environment ~$105/month
 
 ## 📁 Project Structure
 
@@ -105,43 +230,6 @@ ENV=dev REGION=us-east-2 APP=fastapi-app ./deploy-app.sh
 - `POST /orders` - Create new order
 
 ## 🗄️ Database Schema
-
-### **SQLAlchemy Models with Relationships**
-
-```python
-# User Model
-class User:
-    id: int (Primary Key)
-    username: str (Unique)
-    email: str (Unique)
-    created_at: datetime
-    orders: List[Order]  # One-to-many relationship
-
-# Product Model
-class Product:
-    id: int (Primary Key)
-    name: str
-    price: float
-    description: str
-    order_items: List[OrderItem]  # One-to-many relationship
-
-# Order Model
-class Order:
-    id: int (Primary Key)
-    user_id: int (Foreign Key → users.id)
-    total_amount: float
-    status: str
-    user: User  # Many-to-one relationship
-    order_items: List[OrderItem]  # One-to-many relationship
-
-# OrderItem Model (Junction Table)
-class OrderItem:
-    id: int (Primary Key)
-    order_id: int (Foreign Key → orders.id)  
-    product_id: int (Foreign Key → products.id)
-    quantity: int
-    unit_price: float
-```
 
 ### **Sample Data Included**
 
@@ -626,4 +714,3 @@ aws sts get-caller-identity
 4. Test thoroughly
 5. Submit a pull request
 
-This setup provides a solid foundation for building production-ready applications with modern DevOps practices!
